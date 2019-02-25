@@ -32,10 +32,11 @@ class Circle {
         this.radius = rand(minR, maxR);
         this.x = rand(0, maxX);
         this.y = rand(0, maxY);
-        this.vectorX = rand(1, 5);
-        this.vectorY = rand(1, 5);
+        this.vectorX = rand(0, 5);
+        this.vectorY = rand(0, 5);
         this.color = getRandomColor();
         this.score = maxR - this.radius;
+        this.clicked = false;
     }
 
     move() {
@@ -43,9 +44,15 @@ class Circle {
         if (this.x > maxX) {
             this.x -= maxX;
         }
+        if (this.x < 0) {
+            this.x += maxX;
+        }
         this.y += this.vectorY;
         if (this.y > maxY) {
             this.y -= maxY;
+        }
+        if (this.y < 0) {
+            this.y += maxY;
         }
     }
 
@@ -102,6 +109,7 @@ function draw() {
     }
 
     ctx.clearRect(0, 0, maxX, maxY);
+    let remaining = 0;
     for (let i = 0; i < circles.length; i++) {
         let circle = circles[i];
         if (circle === null) {
@@ -112,26 +120,33 @@ function draw() {
             let rect = canvas.getBoundingClientRect();
             let x = clickEvent.clientX - rect.left;
             let y = clickEvent.clientY - rect.top;
-            if (circle.isClicked(x, y)) {
+            if (!circle.clicked && circle.isClicked(x, y)) {
                 score += circle.score;
-                circles[i] = null;
+                circle.clicked = true;
                 clickEvent = null;
                 continue;
             }
         }
 
-        placeCircle(ctx, circle);
-        circle.move()
+        if (!circle.clicked) {
+            placeCircle(ctx, circle);
+            circle.move()
+            remaining++;
+        }
+    }
+
+    if (remaining === 0) {
+        gameFinished = true;
     }
 
     ctx.fillStyle = "#000";
     ctx.font = "24px Verdana";
-    ctx.fillText("Score: " + parseInt(score) + " time: " + parseInt(timeRemaining), maxX / 2 - 10, maxY - 20);
+    ctx.fillText("Score: " + parseInt(score) + " time: " + parseInt(timeRemaining) + " circles:  " + parseInt(remaining), maxX / 2 - 150, maxY - 20);
 
     requestAnimationFrame(draw);
 }
 
-let timeRemaining = 10;
+let timeRemaining = 60;
 const int = setInterval(function () {
     if (paused) {
         return;
